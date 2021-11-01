@@ -14,11 +14,9 @@
 </head>
 <body>
 <div class="container">
-    <video-js id="video" class="video-js" preload="auto" controls muted poster="poster.png">
-        <source src="https://media.githubusercontent.com/media/synchrone/kremlin-clock/master/evergreen.mp4" type="video/mp4">
-        <source src="https://media.githubusercontent.com/media/synchrone/kremlin-clock/master/evergreen.webm" type="video/webm">
-<!--        <source src="evergreen.mp4" type="video/mp4">-->
-<!--        <source src="evergreen.webm" type="video/webm">-->
+    <video-js id="video" class="video-js" preload="auto" muted poster="poster.png">
+        <source src="evergreen.mp4" type="video/mp4">
+        <source src="evergreen.webm" type="video/webm">
     </video-js>
     <p>До Нового Года (<span id="tzname"></span>): <span id="countdown"></span></p>
 </div>
@@ -38,16 +36,35 @@ window.onload = (() => {
 
   const player = videojs('video', {
     controlBar: {
-      playToggle: false
+      playToggle: false,
+      volumePanel: {
+        inline: false
+      }
     },
     userActions: {
       doubleClick: true,
     }
   });
 
-  const clickHandler = () => {player.muted(!player.muted()); player.one('pause', () => player.play())};
-  player.on('click', clickHandler)
-  player.on('touchend', clickHandler)
+  function multiclick(once, twice, timeout = 300){
+    let pending = null;
+    return () => {
+      if(pending === null){
+        pending = setTimeout(() => {
+          once();
+          pending = null;
+        }, timeout);
+      }else{
+        clearTimeout(pending);
+        twice();
+        pending = null;
+      }
+    }
+  }
+  player.on('pointerup', multiclick(
+    () => player.muted(!player.muted()),
+    () => player.isFullscreen() ? player.exitFullscreen() : player.requestFullscreen())
+  )
 
   if (goTime > 0){
     setTimeout(() => {
