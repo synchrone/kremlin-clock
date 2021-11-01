@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Кремлёвские Куранты</title>
-    <meta name="description" content="Besondere Getränke online kaufen ✓ Craft Beer, Gin, Whisky, Rum, Korn, Kaffee, Wein, Limos ✓ Über 1.900 Produkte aus Manufakturen" />
+    <meta name="description" content="Новый год, куранты, часы, спасская башня, видео" />
     <meta name="keywords" content="" />
     <meta name="robots" content="index,follow" />
 
@@ -22,9 +22,10 @@
     <video-js id="video" class="video-js" preload="auto" controls muted poster="poster.png">
         <source src="https://media.githubusercontent.com/media/synchrone/kremlin-clock/master/evergreen.mp4" type="video/mp4">
         <source src="https://media.githubusercontent.com/media/synchrone/kremlin-clock/master/evergreen.webm" type="video/webm">
+<!--        <source src="evergreen.mp4" type="video/mp4">-->
+<!--        <source src="evergreen.webm" type="video/webm">-->
     </video-js>
     <p>До Нового Года (<span id="tzname"></span>): <span id="countdown"></span></p>
-    <p>Buffered: <span id="buffered"></span></p>
 </div>
 
 <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
@@ -74,7 +75,7 @@ window.onload = (() => {
     // Output like "1:01" or "4:03:59" or "123:03:59"
     var ret = "";
     if (days > 0) {
-      ret += days + " days " + (hrs < 10 ? "0" : "");
+      ret += days + " дней " + (hrs < 10 ? "0" : "");
     }
     if (hrs > 0) {
       ret += hrs + ":" + (mins < 10 ? "0" : "");
@@ -92,23 +93,6 @@ window.onload = (() => {
       countdown.innerHTML = formatCounter(remaining);
     }, 1000);
   }, 1000 - (+new Date) % 1000) // align seconds
-
-  player.on('timeupdate', function () {
-    if (this.duration) {
-      let range = 0;
-      let bf = this.buffered();
-      let time = this.currentTime;
-
-      while (!(bf.start(range) <= time && time <= bf.end(range))) {
-        range += 1;
-      }
-      let loadStartPercentage = bf.start(range) / this.duration;
-      let loadEndPercentage = bf.end(range) / this.duration;
-      $('#buffered').innerHtml = `${(loadEndPercentage - loadStartPercentage) * 100} %`;
-      //Update your progressbar DOM here
-    }
-  });
-
 });
 </script>
 </body>
