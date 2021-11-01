@@ -63,8 +63,15 @@ window.onload = (() => {
   }
   player.on('pointerup', multiclick(
     () => player.muted(!player.muted()),
-    () => player.isFullscreen() ? player.exitFullscreen() : player.requestFullscreen())
-  )
+    () => {
+      if(player.isFullscreen()) {
+        player.exitFullscreen();
+      }else{
+        player.muted(false);
+        player.requestFullscreen()
+      }
+    }
+  ));
 
   if (goTime > 0){
     setTimeout(() => {
