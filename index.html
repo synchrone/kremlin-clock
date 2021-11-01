@@ -45,7 +45,9 @@ window.onload = (() => {
     }
   });
 
-  player.on('click', () => {player.muted(!player.muted()); player.one('pause', () => player.play())})
+  const clickHandler = () => {player.muted(!player.muted()); player.one('pause', () => player.play())};
+  player.on('click', clickHandler)
+  player.on('touchend', clickHandler)
 
   if (goTime > 0){
     setTimeout(() => {
