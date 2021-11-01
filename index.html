@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Кремлёвские Куранты</title>
+    <meta name="description" content="Besondere Getränke online kaufen ✓ Craft Beer, Gin, Whisky, Rum, Korn, Kaffee, Wein, Limos ✓ Über 1.900 Produkte aus Manufakturen" />
+    <meta name="keywords" content="" />
+    <meta name="robots" content="index,follow" />
+
+<!--    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">-->
+<!--    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">-->
+<!--    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">-->
+<!--    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">-->
+<!--    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">-->
+<!--    <link rel="icon" type="image/png" sizes="192x192"  href="/android-chrome-192x192.png">-->
+<!--    <link rel="manifest" href="/manifest.json">-->
+<!--    <link type="text/css" rel="stylesheet" href="/style.css"/>-->
+    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
+</head>
+<body>
+<div class="container">
+    <video-js id="video" class="video-js" preload="auto" controls muted poster="poster.png">
+        <source src="evergreen.mp4" type="video/mp4">
+        <source src="evergreen.webm" type="video/webm">
+    </video-js>
+    <p>До Нового Года (<span id="tzname"></span>): <span id="countdown"></span></p>
+    <p>Buffered: <span id="buffered"></span></p>
+</div>
+
+<script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
+<script>
+window.onload = (() => {
+  const fps = 30;
+  const ringTime = 46 + 21 / fps; //seconds + frames
+  const loopTime = 32; //seconds
+
+  const $ = document.querySelector.bind(document);
+  const now = new Date();
+  const debugNewYear = window.location.hash.match(/newYear=(\d+)/);
+  const newYear = debugNewYear ? new Date(now.getTime() + parseInt(debugNewYear[1])) : new Date(now.getFullYear() + 1, 0);
+  const goTime = newYear.getTime() - now.getTime() - ringTime * 1000;
+
+  const player = videojs('video', {
+    controlBar: {
+      playToggle: false
+    },
+    userActions: {
+      doubleClick: true,
+    }
+  });
+
+  player.on('click', () => {player.muted(!player.muted()); player.one('pause', () => player.play())})
+
+  if (goTime > 0){
+    setTimeout(() => {
+      player.currentTime(0);
+      player.play();
+    }, goTime);
+  }else{
+    player.one('seeked', () => player.play());
+    player.currentTime(Math.abs(goTime) / 1000)
+  }
+
+
+  $('#tzname').innerHTML = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const countdown = $('#countdown');
+  function formatCounter(time){
+    // Hours, minutes and seconds
+    var days = ~~(time / 86400);
+    var hrs = ~~((time % 86400) / 3600);
+    var mins = ~~((time % 3600) / 60);
+    var secs = ~~time % 60;
+
+    // Output like "1:01" or "4:03:59" or "123:03:59"
+    var ret = "";
+    if (days > 0) {
+      ret += days + " days " + (hrs < 10 ? "0" : "");
+    }
+    if (hrs > 0) {
+      ret += hrs + ":" + (mins < 10 ? "0" : "");
+    }
+    ret += mins + ":" + (secs < 10 ? "0" : "");
+    ret += secs;
+    return ret;
+  }
+
+  countdown.innerHTML = formatCounter((newYear.getTime() - +new Date) / 1000);
+  setTimeout(() => {
+    const interval = setInterval(() => {
+      const remaining = (newYear.getTime() - +new Date) / 1000;
+      if(remaining <= 0){ return clearInterval(interval); }
+      countdown.innerHTML = formatCounter(remaining);
+    }, 1000);
+  }, 1000 - (+new Date) % 1000) // align seconds
+
+  player.on('timeupdate', function () {
+    if (this.duration) {
+      let range = 0;
+      let bf = this.buffered();
+      let time = this.currentTime;
+
+      while (!(bf.start(range) <= time && time <= bf.end(range))) {
+        range += 1;
+      }
+      let loadStartPercentage = bf.start(range) / this.duration;
+      let loadEndPercentage = bf.end(range) / this.duration;
+      $('#buffered').innerHtml = `${(loadEndPercentage - loadStartPercentage) * 100} %`;
+      //Update your progressbar DOM here
+    }
+  });
+
+});
+</script>
+</body>
+</html>
