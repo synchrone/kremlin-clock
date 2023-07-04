@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Кремлёвские Куранты</title>
+    <meta name="description" content="Новый год, куранты, часы, спасская башня, видео" />
+    <meta name="keywords" content="" />
+    <meta name="robots" content="index,follow" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
+</head>
+<body>
+<div class="container">
+    <video-js id="video" class="video-js" preload="auto" muted poster="poster.png">
+        <source src="evergreen.mp4" type="video/mp4">
+        <source src="evergreen.webm" type="video/webm">
+    </video-js>
+    <p>Звук: <span id="muted">🔇</span> (лучше включить заранее)</p>
+    <p>До Нового Года (<span id="tzname"></span>): <span id="countdown"></span></p>
+</div>
+
+<script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
+<script>
+window.onload = (() => {
+  const fps = 30;
+  const ringTime = 46 + 21 / fps; //seconds + frames
+  const loopTime = 32; //seconds
+
+  const $ = document.querySelector.bind(document);
+  const now = new Date();
+  const debugNewYear = window.location.hash.match(/newYear=(\d+)/);
+  const newYear = debugNewYear ? new Date(now.getTime() + parseInt(debugNewYear[1])) : new Date(now.getFullYear() + 1, 0);
+  const goTime = newYear.getTime() - now.getTime() - ringTime * 1000;
+
+  const player = videojs('video', {
+    controlBar: {
+      playToggle: false,
+      volumePanel: {
+        inline: true
+      }
+    },
+    userActions: {
+      doubleClick: true,
+    }
+  });
+
+  function multiclick(once, twice, timeout = 300){
+    let pending = null;
+    return () => {
+      if(pending === null){
+        pending = setTimeout(() => {
+          once();
+          pending = null;
+        }, timeout);
+      }else{
+        clearTimeout(pending);
+        twice();
+        pending = null;
+      }
+    }
+  }
+
+  let $muted = $('#muted');
+  function toggleMute(){
+    const mute = !player.muted();
+    player.muted(mute)
+    $muted.innerHTML = mute ? '🔇' : '🔊';
+  }
+  $muted.addEventListener('click', toggleMute)
+
+  player.on('pointerup', multiclick(
+    toggleMute,
+    () => {
+      if(player.isFullscreen()) {
+        player.exitFullscreen();
+      }else{
+        player.muted(false);
+        player.requestFullscreen()
+      }
+    }
+  ));
+
+  if (goTime > 0){
+    setTimeout(() => {
+      player.currentTime(0);
+      player.play();
+    }, goTime);
+  }else{
+    player.one('seeked', () => player.play());
+    player.currentTime(Math.abs(goTime) / 1000)
+  }
+
+
+  $('#tzname').innerHTML = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const countdown = $('#countdown');
+  function formatCounter(time){
+    // Hours, minutes and seconds
+    var days = ~~(time / 86400);
+    var hrs = ~~((time % 86400) / 3600);
+    var mins = ~~((time % 3600) / 60);
+    var secs = ~~time % 60;
+
+    // Output like "1:01" or "4:03:59" or "123:03:59"
+    var ret = "";
+    if (days > 0) {
+      ret += days + " дней " + (hrs < 10 ? "0" : "");
+    }
+    if (hrs > 0) {
+      ret += hrs + ":" + (mins < 10 ? "0" : "");
+    }
+    ret += mins + ":" + (secs < 10 ? "0" : "");
+    ret += secs;
+    return ret;
+  }
+
+  countdown.innerHTML = formatCounter((newYear.getTime() - +new Date) / 1000);
+  setTimeout(() => {
+    const interval = setInterval(() => {
+      const remaining = (newYear.getTime() - +new Date) / 1000;
+      if(remaining <= 0){ return clearInterval(interval); }
+      countdown.innerHTML = formatCounter(remaining);
+    }, 1000);
+  }, 1000 - (+new Date) % 1000) // align seconds
+});
+</script>
+</body>
+</html>
